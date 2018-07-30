@@ -38,7 +38,7 @@
 -type state_t() :: #state{}.
 
 %% Macros.
--define(TIMEOUT, 1000).
+-define(TIMEOUT, 20000).
 
 -include("partisan.hrl").
 -include("partisan_peer_connection.hrl").
@@ -194,7 +194,7 @@ handle_message({state, Tag, LocalState},
     #{name := Name} = Peer,
 
     %% If gossip on the client side is disabled, the server will never learn
-    %% about the clients presence and connect to it, because that's 
+    %% about the clients presence and connect to it, because that's
     %% what normally happens in the gossip path.
     %%
     %% Therefore, send an explicit message back to the server telling it
@@ -207,7 +207,7 @@ handle_message({state, Tag, LocalState},
         false ->
             ok;
         true ->
-            lager:info("Notifying ~p to connect to us at ~p at pid ~p", 
+            lager:info("Notifying ~p to connect to us at ~p at pid ~p",
                        [Name, partisan_peer_service_manager:mynode(), self()]),
 
             Message = {connect, self(), partisan_peer_service_manager:myself()},
