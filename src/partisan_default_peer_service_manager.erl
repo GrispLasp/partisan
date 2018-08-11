@@ -180,8 +180,8 @@ forward_message(Name, Channel, ServerRef, Message, Options) ->
     %% - not labeled for causal delivery
     %% - message does not need acknowledgements
     %%
-    FastForward = not (CausalLabel =/= undefined) andalso 
-                  not ShouldAck andalso 
+    FastForward = not (CausalLabel =/= undefined) andalso
+                  not ShouldAck andalso
                   not DisableFastForward,
 
     %% If attempting to forward to the local node, bypass.
@@ -215,7 +215,7 @@ forward_message(Name, Channel, ServerRef, Message, Options) ->
                             end;
                         false ->
                             gen_server:call(?MODULE, FullMessage, infinity)
-                    end                
+                    end
             end
     end.
 
@@ -228,14 +228,14 @@ receive_message(Peer, {forward_message, ServerRef, {'$partisan_padded', _Padding
 receive_message(_Peer, {forward_message, _ServerRef, {causal, Label, _, _, _, _, _} = Message}) ->
     partisan_causality_backend:receive_message(Label, Message);
 receive_message(Peer, {forward_message, ServerRef, Message} = FullMessage) ->
-    lager:info("in mesage receive at node ~p for peer ~p", [node(), Peer]),
+    % lager:info("in mesage receive at node ~p for peer ~p", [node(), Peer]),
 
     case partisan_config:get(disable_fast_receive, true) of
         true ->
-            lager:info("in mesage receive at node ~p for peer ~p FAST RECEIVE DISABLE", [node(), Peer]),
+            % lager:info("in mesage receive at node ~p for peer ~p FAST RECEIVE DISABLE", [node(), Peer]),
             gen_server:call(?MODULE, {receive_message, Peer, FullMessage}, infinity);
         false ->
-            lager:info("in mesage receive at node ~p for peer ~p FAST RECEIVE NOT DISABLE", [node(), Peer]),
+            % lager:info("in mesage receive at node ~p for peer ~p FAST RECEIVE NOT DISABLE", [node(), Peer]),
             partisan_util:process_forward(ServerRef, Message)
     end;
 receive_message(_Peer, Message) ->
@@ -298,7 +298,7 @@ init([]) ->
                         erlang:unique_integer()}),
 
     case partisan_config:get(binary_padding, false) of
-        true ->    
+        true ->
             %% Use 64-byte binary to force shared heap usage to cut down on copying.
             BinaryPaddingTerm = rand_bits(512),
             partisan_config:set(binary_padding_term, BinaryPaddingTerm);
@@ -459,10 +459,10 @@ handle_call({sync_join, #{name := Name} = Node},
 
 handle_call({send_message, Name, Channel, Message}, _From,
             #state{connections=Connections}=State) ->
-    Result = do_send_message(Name, 
-                             Channel, 
-                             ?DEFAULT_PARTITION_KEY, 
-                             Message, 
+    Result = do_send_message(Name,
+                             Channel,
+                             ?DEFAULT_PARTITION_KEY,
+                             Message,
                              Connections),
     {reply, Result, State};
 
@@ -1035,7 +1035,7 @@ internal_leave(Node, #state{actor=Actor,
 %% @private
 internal_join(Node, State) when is_atom(Node) ->
     %% Maintain disterl connection for control messages.
-    _ = net_kernel:connect(Node),
+    _ = net_kernel:connect_node(Node),
 
     %% Get listen addresses.
     ListenAddrs = rpc:call(Node, partisan_config, listen_addrs, []),
@@ -1056,7 +1056,7 @@ internal_join(#{name := Name} = Node,
                      connections=Connections0,
                      membership=Membership}=State) ->
     %% Maintain disterl connection for control messages.
-    _ = net_kernel:connect(Name),
+    _ = net_kernel:connect_node(Name),
 
     %% Add to list of pending connections.
     Pending = [Node|Pending0],
@@ -1080,7 +1080,7 @@ sync_internal_join(#{name := Name} = Node,
                      connections=Connections0,
                      membership=Membership}=State) ->
     %% Maintain disterl connection for control messages.
-    _ = net_kernel:connect(Name),
+    _ = net_kernel:connect_node(Name),
 
     %% Add to list of pending connections.
     Pending = [Node|Pending0],
